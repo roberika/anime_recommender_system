@@ -16,7 +16,11 @@ The data this algortihm is trained on is from 2020, so it doesn't include anime 
 
 ## Setup Guide
 
-First, run **module_install.bat** to install relevant packages for this algorithm. Then run **main.py**. That program will filter the data and clean it before feeding it to the algorithm. After that, run **knn.py** that would actually train the file.
+For the editing software, I personally just used IDLE that comes prepackage with python. That said, IDLE is very primitive and you should probably either use Jupyter Notebook or VSCode. I've never used those for python though so you'll have to learn them through tutorials.
+
+First, before anything else, install the latest version of Python. After the first step, run **module_install.bat** to install relevant packages for this algorithm. Then run **main.py**. That program will filter the data and clean it before feeding it to the algorithm. After that, run **knn.py** that would actually train the file.
+
+If you want to preview the data, **DO NOT** do it through the .csv file. It's way to unreadable for the human eye. Instead, uncomment the lines where it says **write_[type]_data**. Those lines will call the function to write the data into txt files, which you can then read in **Notepad++**. No, normal Notepad can't handle those files either.
 
 
 
