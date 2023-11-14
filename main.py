@@ -137,7 +137,7 @@ anime_data = anime_data.drop(filter_anime.index)
 print("Finished filtering anime data.")
 print_data_count()
                               
-#anime_data.to_csv(index=False, path_or_buf='filtered_anime_data.csv')
+anime_data.to_csv(index=False, path_or_buf='filtered_anime_data.csv')
 
 # Filter juga anime yang didrop pada list rating
 filter_rating = rating_data[rating_data.anime_id.isin(filter_anime.MAL_ID.to_list())]
@@ -170,7 +170,7 @@ rating_data = rating_data.drop(filter_rating.index)
 print("Finished filtering rating data.")
 print_data_count()
 
-#rating_data.to_csv(index=False, path_or_buf='filtered_rating_data.csv')
+rating_data.to_csv(index=False, path_or_buf='filtered_rating_data.csv')
 
 ##write_anime_data(trans, "filtered_anime_data")
 ##write_rating_data(trans, "filtered_rating_data", data_per_file)
