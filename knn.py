@@ -110,22 +110,28 @@ def get_random_anime():
     return np.random.choice(watch_data.shape[0])
     print("Anime ID :", random_index)
     print("Anime Name :", get_anime_by_id(random_index))
-random_index = get_random_anime()
+random_id = get_random_anime()
 
-def generate_recommendation():
-    return distance_model.kneighbors(np.reshape(watch_data.iloc[random_index, :].values,(1,-1)), n_neighbors = k + 1)
-distances, indices = generate_recommendation()
+def generate_recommendation(anime_id):
+    return distance_model.kneighbors(np.reshape(watch_data.iloc[anime_id, :].values,(1,-1)), n_neighbors = k + 1)
+distances, indices = generate_recommendation(random_id)
 
-def print_recommendation(distances, indices):
+def print_recommendation(anime_id, distances, indices):
     for i in range(0, len(distances.flatten())):
         if i == 0:
-            print('Recommendations for {0}:\n'.format(get_anime_by_id(watch_data.index[random_index])))
+            print('Recommendations for {0}:\n'.format(get_anime_by_id(watch_data.index[anime_id])))
         else:
             print('{0}: {1}, with distance of {2}:'.format(i, get_anime_by_id(watch_data.index[indices.flatten()[i]]), distances.flatten()[i]))
-print_recommendation(distances, indices)
+print_recommendation(anime_id, distances, indices)
 
+def get_recommendation(anime_id):
+    distances, indices = generate_recommendation(anime_id)
+    print_recommendation(anime_id, distances, indices)
 
-
+def get_random_recommendation():
+    random_id = get_random_anime()
+    get_recommendation(random_id)
+get_random_recommendation()
 
 # Tidak bisa disave jadi csv karena terlalu besar, jadi kode diatas harus terus dijalankan saja
 # ----
