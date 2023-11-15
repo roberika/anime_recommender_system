@@ -13,6 +13,8 @@ import pandas as pd
 import numpy as np
 from scipy.sparse import csr_matrix
 from pandas.api.types import CategoricalDtype
+import sklearn
+from sklearn.neighbors import NearestNeighbors
 # Visualization Phase
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -29,6 +31,11 @@ warnings.filterwarnings('ignore')
 
 
 # -- Initialisasi array user-anime
+def load_anime_data():
+    return pd.read_csv("filtered_anime_data.csv")
+full_anime = load_anime_data()
+print(full_anime.shape)
+
 def load_rating_data():
     return pd.read_csv("filtered_rating_data.csv")
 rating_data = load_rating_data()
@@ -64,16 +71,58 @@ print("Intializing user col...")
 col = rating_data.user_id.astype(user_c).cat.codes
 
 print("Creating scipy sparse matrix...")
-sparse_matrix = csr_matrix((rating_data["rating"]/rating_data["rating"], (row, col)), shape=(anime_c.categories.size, user_c.categories.size))
+watch_data = csr_matrix((rating_data["rating"]/rating_data["rating"], (row, col)), shape=(anime_c.categories.size, user_c.categories.size))
 
+# Harus diubah karena ada beberapa fungsi yang saya temukan yang lebih mudah
+# dipakai jika dalam bentuk Data Frame
 print("Converting scipy sparse matrix to pandas sparse DataFrame...")
-watch_data = pd.DataFrame.sparse.from_spmatrix(sparse_matrix, index=anime_c.categories, columns=user_c.categories).fillna(0)
+watch_data = pd.DataFrame.sparse.from_spmatrix(watch_data, index=anime_c.categories, columns=user_c.categories).fillna(0)
 
+# Note: this is copied. Please check the docs to actually understand the code.
+# I'm too tired to do it now.
+# NearestNeighbors adalah algoritma untuk secara otomatis menghitung jarak
+# antara dua objek dari library sklearn. Metric yang digunakan di set pada
+# cosine similiarity karena kita mau melihat apakah anime A ditonton oleh
+# audience yang sama dengan anime B. Algorithm yang tersedia adalah brute, K-Tree,
+# dan Ball Tree, tetapi yang kita pakai adalah brute sesuai rekomendasi dari
+# sklearn untuk menggunakan brute jika input datanya berbentuk sparse matrix,
+# metricnya precomputed atau sudah ada, dimensi jarak lebih dari 15, jumlah k
+# lebih dari atau sama dengan setengah dari jumlah data, dan effective metric
+# tidak dalam valid metric.
+# Untuk kasus kita, kita memenuhi kondisi 1 dan 3 karena input data kita memang sparse
+# dan dimensi kita sesuai dengan jumlah user dan sudah pasti lebih dari 15.
+distance_model = NearestNeighbors(metric = 'cosine', algorithm = 'brute')
+distance_model.fit(watch_data)
 
+# Mengambil anime id random, lalu generate k neighbors sebagai anime yang
+# audiencenya paling dekat dengan anime tersebut. Diberi
+# watch_data.iloc[random_index, :].value.reshape(1, -1) karena kita mau
+# memasukkan hanya anime baru tersebut dan sparse matrix penonton anime
+# baru itu sebagai input. K + 1 karena anime pertama yang ditampilkan,
+# anime terdekat dengan anime input, ialah anime itu sendiri yang ada di
+# dalam modelnya.
+k = 5
 
+def get_anime_by_id(id):
+    return full_anime.loc[full_anime.MAL_ID==id].Name.values
 
+def get_random_anime():
+    return np.random.choice(watch_data.shape[0])
+    print("Anime ID :", random_index)
+    print("Anime Name :", get_anime_by_id(random_index))
+random_index = get_random_anime()
 
+def generate_recommendation():
+    return distance_model.kneighbors(np.reshape(watch_data.iloc[random_index, :].values,(1,-1)), n_neighbors = k + 1)
+distances, indices = generate_recommendation()
 
+def print_recommendation(distances, indices):
+    for i in range(0, len(distances.flatten())):
+        if i == 0:
+            print('Recommendations for {0}:\n'.format(get_anime_by_id(watch_data.index[random_index])))
+        else:
+            print('{0}: {1}, with distance of {2}:'.format(i, get_anime_by_id(watch_data.index[indices.flatten()[i]]), distances.flatten()[i]))
+print_recommendation(distances, indices)
 
 
 
