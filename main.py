@@ -42,7 +42,7 @@ def load_anime_data():
 anime_data = load_anime_data()
 
 def load_rating_data():
-    return pd.read_csv("Dataset/rating_complete.csv")
+    return pd.read_csv("Dataset/animelist.csv")
 rating_data = load_rating_data()
 
 # Cek apakah data sudah sesuai isi csv
@@ -90,20 +90,36 @@ def write_rating_data(trans, name, data_per_file):
 
 
 # -- Tambah kolom jumlah rating
-anime_data["Score-1"] = pd.to_numeric(anime_data["Score-1"], errors="coerce")
-anime_data["Score-2"] = pd.to_numeric(anime_data["Score-2"], errors="coerce")
-anime_data["Score-3"] = pd.to_numeric(anime_data["Score-3"], errors="coerce")
-anime_data["Score-4"] = pd.to_numeric(anime_data["Score-4"], errors="coerce")
-anime_data["Score-5"] = pd.to_numeric(anime_data["Score-5"], errors="coerce")
-anime_data["Score-6"] = pd.to_numeric(anime_data["Score-6"], errors="coerce")
-anime_data["Score-7"] = pd.to_numeric(anime_data["Score-7"], errors="coerce")
-anime_data["Score-8"] = pd.to_numeric(anime_data["Score-8"], errors="coerce")
-anime_data["Score-9"] = pd.to_numeric(anime_data["Score-9"], errors="coerce")
-anime_data["Score-10"] = pd.to_numeric(anime_data["Score-10"], errors="coerce")
-anime_data["Rating_Count"] = anime_data.loc[:,["Score-1","Score-2","Score-3","Score-4","Score-5","Score-6","Score-7","Score-8","Score-9","Score-10"]].astype(float).sum(axis = 1)
+##anime_data["Score-1"] = pd.to_numeric(anime_data["Score-1"], errors="coerce")
+##anime_data["Score-2"] = pd.to_numeric(anime_data["Score-2"], errors="coerce")
+##anime_data["Score-3"] = pd.to_numeric(anime_data["Score-3"], errors="coerce")
+##anime_data["Score-4"] = pd.to_numeric(anime_data["Score-4"], errors="coerce")
+##anime_data["Score-5"] = pd.to_numeric(anime_data["Score-5"], errors="coerce")
+##anime_data["Score-6"] = pd.to_numeric(anime_data["Score-6"], errors="coerce")
+##anime_data["Score-7"] = pd.to_numeric(anime_data["Score-7"], errors="coerce")
+##anime_data["Score-8"] = pd.to_numeric(anime_data["Score-8"], errors="coerce")
+##anime_data["Score-9"] = pd.to_numeric(anime_data["Score-9"], errors="coerce")
+##anime_data["Score-10"] = pd.to_numeric(anime_data["Score-10"], errors="coerce")
+##anime_data["Rating_Count"] = anime_data.loc[:,["Score-1","Score-2","Score-3","Score-4","Score-5","Score-6","Score-7","Score-8","Score-9","Score-10"]].astype(float).sum(axis = 1)
 # ternyata anime yang ratingnya dibawah 100 user sudah langsung ditandai "Unknown" skornya
 
 # -- Buang poin-poin data yang buruk
+
+# Drop column rating karena kita tidak melihat rating, hanya user sudah atau belum nonton
+# Drop column watched_episodes dengan alasan yang sama
+rating_data = rating_data.drop(columns=["rating", "watched_episodes"])
+
+# Filter rating yang bukan Currently Watching (1), Completed (2), atau On Hold (3)
+filter_rating = rating_data.loc[rating_data.watching_status >= 4]
+print("Success creating filter for " + str(len(filter_rating)) + " ratings.")
+print("No Ratings that are not Watching, Completed, or On Hold")
+rating_data = rating_data.drop(filter_rating.index)
+print("Finished filtering rating data.")
+print_data_count()
+
+# Drop column watching_status dengan alasan yang sama karena kita sudah filter
+rating_data = rating_data.drop(columns=["watching_status"])
+
 # Filter anime yang tipe medianya tidak diketahui
 filter_anime = anime_data.loc[(anime_data.Type == "Unknown")]
 print("Success creating filter for " + str(len(filter_anime)) + " anime.")
@@ -122,12 +138,12 @@ print_data_count()
 
 # Filter anime yang skornya dirating kurang dari 100 orang
 # Ini redundan karena anime dibawah 100 rating sudah memiliki score Unknown dan sudah difilter
-filter_anime = anime_data.loc[(anime_data.Rating_Count < 100)]
-print("Success creating filter for " + str(len(filter_anime)) + " anime.")
-print("No Rating Count less than 100")
-anime_data = anime_data.drop(filter_anime.index)
-print("Finished filtering anime data.")
-print_data_count()
+##filter_anime = anime_data.loc[(anime_data.Rating_Count < 100)]
+##print("Success creating filter for " + str(len(filter_anime)) + " anime.")
+##print("No Rating Count less than 100")
+##anime_data = anime_data.drop(filter_anime.index)
+##print("Finished filtering anime data.")
+##print_data_count()
 
 # Filter anime yang tidak PG-18
 filter_anime = anime_data.loc[(anime_data.Genres.str.contains("Hentai"))]
@@ -137,7 +153,7 @@ anime_data = anime_data.drop(filter_anime.index)
 print("Finished filtering anime data.")
 print_data_count()
                               
-anime_data.to_csv(index=False, path_or_buf='filtered_anime_data.csv')
+# anime_data.to_csv(index=False, path_or_buf='filtered_anime_data.csv')
 
 # Filter juga anime yang didrop pada list rating
 filter_rating = rating_data[rating_data.anime_id.isin(filter_anime.MAL_ID.to_list())]
@@ -148,6 +164,7 @@ print("Finished filtering rating data.")
 print_data_count()
 
 # Tampilkan jumlah rating untuk tiap user
+print("Finished calculating user rating count.")
 rating_count = rating_data.user_id.value_counts()
 
 # Orang yang menonton lebih dari 10000 sulit dijadikan referensi karena dia kemungkinan hanya menonton

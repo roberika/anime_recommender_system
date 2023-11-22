@@ -32,9 +32,9 @@ warnings.filterwarnings('ignore')
 
 # -- Initialisasi array user-anime
 def load_anime_data():
-    return pd.read_csv("filtered_anime_data.csv")
-full_anime = load_anime_data()
-print(full_anime.shape)
+    return pd.read_csv("Dataset/anime.csv")
+full_anime_data = load_anime_data()
+print(full_anime_data.shape)
 
 def load_rating_data():
     return pd.read_csv("filtered_rating_data.csv")
@@ -58,8 +58,10 @@ def print_data_count():
 print_data_count()
 
 # -- Membuat sparse matrix berisi anime yang sudah ditonton tiap user
+# Untuk categorinya pakai full_anime_data karena ada beberapa anime yang
+# tidak ada di anime_data karena berasal dari rating_data yang difilter.
 print("Intializing anime categorical D type...")
-anime_c = CategoricalDtype(sorted(rating_data.anime_id.unique()))
+anime_c = CategoricalDtype(sorted(full_anime_data.MAL_ID.unique()))
 
 print("Intializing user categorical D type...")
 user_c = CategoricalDtype(sorted(rating_data.user_id.unique()))
@@ -70,8 +72,11 @@ row = rating_data.anime_id.astype(anime_c).cat.codes
 print("Intializing user col...")
 col = rating_data.user_id.astype(user_c).cat.codes
 
+# Tambah kolom berisi satu supaya jadi isi sparse matrix
+rating_data["one"] = 1
+
 print("Creating scipy sparse matrix...")
-watch_data = csr_matrix((rating_data["rating"]/rating_data["rating"], (row, col)), shape=(anime_c.categories.size, user_c.categories.size))
+watch_data = csr_matrix((rating_data["one"], (row, col)), shape=(anime_c.categories.size, user_c.categories.size))
 
 # Harus diubah karena ada beberapa fungsi yang saya temukan yang lebih mudah
 # dipakai jika dalam bentuk Data Frame
@@ -91,6 +96,7 @@ watch_data = pd.DataFrame.sparse.from_spmatrix(watch_data, index=anime_c.categor
 # tidak dalam valid metric.
 # Untuk kasus kita, kita memenuhi kondisi 1 dan 3 karena input data kita memang sparse
 # dan dimensi kita sesuai dengan jumlah user dan sudah pasti lebih dari 15.
+print("Creating Nearest Neighbors model...")
 distance_model = NearestNeighbors(metric = 'cosine', algorithm = 'brute')
 distance_model.fit(watch_data)
 
@@ -101,37 +107,95 @@ distance_model.fit(watch_data)
 # baru itu sebagai input. K + 1 karena anime pertama yang ditampilkan,
 # anime terdekat dengan anime input, ialah anime itu sendiri yang ada di
 # dalam modelnya.
-k = 5
+k = 10
 
 def get_anime_by_id(id):
-    return full_anime.loc[full_anime.MAL_ID==id].Name.values
+    return full_anime_data.loc[full_anime_data.MAL_ID==id].Name.values
 
 def get_random_anime():
     return np.random.choice(watch_data.shape[0])
     print("Anime ID :", random_index)
     print("Anime Name :", get_anime_by_id(random_index))
-random_id = get_random_anime()
 
-def generate_recommendation(anime_id):
-    return distance_model.kneighbors(np.reshape(watch_data.iloc[anime_id, :].values,(1,-1)), n_neighbors = k + 1)
-distances, indices = generate_recommendation(random_id)
+def generate_recommendation(indices, k): # There's your hint Robert. This and flatten. You're almost there.
+    return distance_model.kneighbors(np.reshape(watch_data.iloc[indices, :].values,(1,-1)), n_neighbors = k + 1)
 
 def print_recommendation(anime_id, distances, indices):
-    for i in range(0, len(distances.flatten())):
-        if i == 0:
-            print('Recommendations for {0}:\n'.format(get_anime_by_id(watch_data.index[anime_id])))
-        else:
-            print('{0}: {1}, with distance of {2}:'.format(i, get_anime_by_id(watch_data.index[indices.flatten()[i]]), distances.flatten()[i]))
-print_recommendation(anime_id, distances, indices)
+    print('Recommendations for {0}:\n'.format(get_anime_by_id(anime_id)))
+    for i in range(0, len(distances)):
+        print('{0}: {1}, with distance of {2}:'.format(i, get_anime_by_id(watch_data.index[indices[i]]), distances[i]))
 
 def get_recommendation(anime_id):
-    distances, indices = generate_recommendation(anime_id)
-    print_recommendation(anime_id, distances, indices)
+    index = full_anime_data.loc[full_anime_data.MAL_ID == anime_id].index.values[0]
+    distances, indices = generate_recommendation(index, k)
+    print_recommendation(anime_id, distances.flatten(), indices.flatten())
 
 def get_random_recommendation():
     random_id = get_random_anime()
     get_recommendation(random_id)
-get_random_recommendation()
+#get_random_recommendation()
+
+def get_recommendation_for_user(user_id):
+    watch_list = rating_data.loc[rating_data.user_id == user_id].anime_id
+    recommendation_list = pd.Series([])
+    for anime_id in watch_list:
+        index = full_anime_data.loc[full_anime_data.MAL_ID == anime_id].index.values[0]
+        distances, indices = generate_recommendation(index, k)
+        recommendation_list = recommendation_list._append(pd.Series(distances.flatten(), index=indices.flatten()))
+    print_recommendation_for_user(user_id, recommendation_list)
+    
+def print_recommendation_for_user(user_id, recommendation_list):
+    distances = recommendation_list.values
+    indices = recommendation_list.index
+    print('Recommendations for user of ID {0}:\n'.format(user_id))
+    for i in range(0, len(distances)):
+        print('{0}: {1}, with distance of {2}:'.format(i, get_anime_by_id(watch_data.index[indices[i]]), distances[i]))
+
+##with open(r'model.dart', 'a') as f:
+##    f.write("class Model {")
+##    f.write("var animeList = [\n")
+##    f.close()
+
+# Membuat class Dart berisi data anime
+# Supaya Panda tidak menambah ... di akhir kolom
+pd.set_option("display.max_colwidth", None)
+print("Drop everything else to save memory")
+full_anime_data = full_anime_data.drop(columns=["English name", "Japanese name", "Episodes", "Aired", "Producers", "Licensors", "Duration", "Rating", "Ranked", "Popularity", "Members", "Favorites", "Completed", "On-Hold", "Dropped", "Plan to Watch", "Score-10", "Score-9", "Score-8", "Score-7", "Score-6", "Score-5", "Score-4", "Score-3", "Score-2", "Score-1"])
+print("Writing dart class...")
+full_anime_data["Dart"] = 'Anime(\nid: ' + full_anime_data["MAL_ID"].astype(str) + ',\nname: "' + full_anime_data["Name"].astype(str) + '",\nscore: ' + full_anime_data["Score"].astype(str) + ',\ngenres: "' + full_anime_data["Genres"].astype(str) + '",\ntype: "' + full_anime_data["Type"].astype(str) + '",\npremiered: "' + full_anime_data["Premiered"].astype(str) + '",\nstudios: "' + full_anime_data["Studios"].astype(str) + '",\n),'
+with open(r'anime_data.dart', 'a', encoding="utf-8") as f:
+    f.write("class Model {\nvar animeList = [\n" + full_anime_data[["Dart"]].to_string(header=False, justify="left", index=False) + "\n];\n}\n")
+    f.close()
+
+# Ini membuat class Dart untuk menyimpan data anime bersama rekomendasinya. Tidak dipakai karena terlalu lamban
+##k = 100
+##with open(r'anime_data.dart', 'a') as f:
+##    f.write("class Model {\nvar animeList = [\n")
+##    for part in range(0,176):
+##        end = ((part+1)*100)
+##        if part == 175:
+##            end = 17562
+##        s = ''
+##        for i in range((part*100),end):
+##            anime = full_anime_data.iloc[i]
+##            s += 'Anime(\nid: ' + str(anime.MAL_ID) + ',\nname: "' + str(anime.Name) + '",\nscore: ' + str(anime.Score) + ',\ngenres: ' + str(anime.Genres.split(", ")) + ',\ntype: "' + str(anime.Type) + '",\npremiered: "' + str(anime.Premiered) + '",\nstudios:' + str(anime.Studios.split(", ")) + ',\nrecommendations: [\n'
+##            distances, indices = generate_recommendation(i, k)
+##            distances = distances.flatten()[1:]
+##            indices = indices.flatten()[1:]
+##            for r in range(0, k):
+##                s += 'Distance(id: ' + str(full_anime_data.iloc[indices[r]].MAL_ID) + ', distance: ' + str(int(distances[r] * 10000)) + '),\n'
+##            s += '],\n),\n'
+##            print("Finished writing " + str(anime.MAL_ID) + "(" + str(i) + ")")
+##        f.write(s)
+##        print("Milestone " + str(part) + " x 100")
+##    f.write("];\n}\n")
+##    f.close()
+    
+##with open(r'model.dart', 'a') as f:
+##    f.write("];\n}\n")
+##    f.close()
+
+
 
 # Tidak bisa disave jadi csv karena terlalu besar, jadi kode diatas harus terus dijalankan saja
 # ----
