@@ -105,9 +105,8 @@ def write_rating_data(trans, name, data_per_file):
 
 # -- Buang poin-poin data yang buruk
 
-# Drop column rating karena kita tidak melihat rating, hanya user sudah atau belum nonton
-# Drop column watched_episodes dengan alasan yang sama
-rating_data = rating_data.drop(columns=["rating", "watched_episodes"])
+# Drop column watched_episodes karena kita tidak melihat jumlah episode, hanya user sudah atau belum nonton
+rating_data = rating_data.drop(columns=["watched_episodes"])
 
 # Filter rating yang bukan Currently Watching (1), Completed (2), atau On Hold (3)
 filter_rating = rating_data.loc[rating_data.watching_status >= 4]
@@ -153,7 +152,7 @@ anime_data = anime_data.drop(filter_anime.index)
 print("Finished filtering anime data.")
 print_data_count()
                               
-# anime_data.to_csv(index=False, path_or_buf='filtered_anime_data.csv')
+anime_data.to_csv(index=False, path_or_buf='filtered_anime_data.csv')
 
 # Filter juga anime yang didrop pada list rating
 filter_rating = rating_data[rating_data.anime_id.isin(filter_anime.MAL_ID.to_list())]

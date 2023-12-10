@@ -10,6 +10,7 @@
 # Initialisasi package
 # Database Phase
 import pandas as pd
+import pickle
 import numpy as np
 from scipy.sparse import csr_matrix
 from pandas.api.types import CategoricalDtype
@@ -60,15 +61,14 @@ print_data_count()
 # -- Membuat sparse matrix berisi anime yang sudah ditonton tiap user
 # Untuk categorinya pakai full_anime_data karena ada beberapa anime yang
 # tidak ada di anime_data karena berasal dari rating_data yang difilter.
+
+# Membuat kolom anime dan baris user
 print("Intializing anime categorical D type...")
 anime_c = CategoricalDtype(sorted(full_anime_data.MAL_ID.unique()))
-
 print("Intializing user categorical D type...")
 user_c = CategoricalDtype(sorted(rating_data.user_id.unique()))
-
 print("Intializing anime row...")
 row = rating_data.anime_id.astype(anime_c).cat.codes
-
 print("Intializing user col...")
 col = rating_data.user_id.astype(user_c).cat.codes
 
@@ -107,7 +107,7 @@ distance_model.fit(watch_data)
 # baru itu sebagai input. K + 1 karena anime pertama yang ditampilkan,
 # anime terdekat dengan anime input, ialah anime itu sendiri yang ada di
 # dalam modelnya.
-k = 10
+k = 50
 
 def get_anime_by_id(id):
     return full_anime_data.loc[full_anime_data.MAL_ID==id].Name.values
@@ -117,16 +117,22 @@ def get_random_anime():
     print("Anime ID :", random_index)
     print("Anime Name :", get_anime_by_id(random_index))
 
-def generate_recommendation(indices, k): # There's your hint Robert. This and flatten. You're almost there.
-    return distance_model.kneighbors(np.reshape(watch_data.iloc[indices, :].values,(1,-1)), n_neighbors = k + 1)
+def generate_recommendation(index, k): # There's your hint Robert. This and flatten. You're almost there.
+    return distance_model.kneighbors(np.reshape(watch_data.iloc[index, :].values,(1,-1)), n_neighbors = k + 1)
+
+def generate_recommendations(anime_watch_data, k): # Yeaahhh this works, baebey!
+    return distance_model.kneighbors(anime_watch_data, n_neighbors = k + 1)
 
 def print_recommendation(anime_id, distances, indices):
     print('Recommendations for {0}:\n'.format(get_anime_by_id(anime_id)))
     for i in range(0, len(distances)):
         print('{0}: {1}, with distance of {2}:'.format(i, get_anime_by_id(watch_data.index[indices[i]]), distances[i]))
 
-def get_recommendation(anime_id):
-    index = full_anime_data.loc[full_anime_data.MAL_ID == anime_id].index.values[0]
+def get_anime_index(id):
+    return full_anime_data.loc[full_anime_data.MAL_ID == id].index.values[0]
+
+def get_recommendation(anime_id, k):
+    index = get_anime_index(anime_id)
     distances, indices = generate_recommendation(index, k)
     print_recommendation(anime_id, distances.flatten(), indices.flatten())
 
@@ -151,21 +157,118 @@ def print_recommendation_for_user(user_id, recommendation_list):
     for i in range(0, len(distances)):
         print('{0}: {1}, with distance of {2}:'.format(i, get_anime_by_id(watch_data.index[indices[i]]), distances[i]))
 
-##with open(r'model.dart', 'a') as f:
-##    f.write("class Model {")
-##    f.write("var animeList = [\n")
-##    f.close()
+def save_anime_rating_model():
+    print("Saving recommendation model...")
+    pickle.dump(distance_model, open('anime_rating_model.sav', 'wb'))
+# Terlalu berat
+##save_anime_rating_model()
 
-# Membuat class Dart berisi data anime
-# Supaya Panda tidak menambah ... di akhir kolom
-pd.set_option("display.max_colwidth", None)
-print("Drop everything else to save memory")
-full_anime_data = full_anime_data.drop(columns=["English name", "Japanese name", "Episodes", "Aired", "Producers", "Licensors", "Duration", "Rating", "Ranked", "Popularity", "Members", "Favorites", "Completed", "On-Hold", "Dropped", "Plan to Watch", "Score-10", "Score-9", "Score-8", "Score-7", "Score-6", "Score-5", "Score-4", "Score-3", "Score-2", "Score-1"])
-print("Writing dart class...")
-full_anime_data["Dart"] = 'Anime(\nid: ' + full_anime_data["MAL_ID"].astype(str) + ',\nname: "' + full_anime_data["Name"].astype(str) + '",\nscore: ' + full_anime_data["Score"].astype(str) + ',\ngenres: "' + full_anime_data["Genres"].astype(str) + '",\ntype: "' + full_anime_data["Type"].astype(str) + '",\npremiered: "' + full_anime_data["Premiered"].astype(str) + '",\nstudios: "' + full_anime_data["Studios"].astype(str) + '",\n),'
-with open(r'anime_data.dart', 'a', encoding="utf-8") as f:
-    f.write("class Model {\nvar animeList = [\n" + full_anime_data[["Dart"]].to_string(header=False, justify="left", index=False) + "\n];\n}\n")
-    f.close()
+def create_anime_recommendation_model(k):
+    # Hitung jarak antar anime
+    print("Rendering distances 20 nearest neighbor for each anime...")
+    distances, indices = generate_recommendations(watch_data, k)
+    distances = distances[:, 1:]
+    indices = indices[:, 1:]
+
+    # Gabungkan jadi 1 array
+    print("Combine to one array...")
+    rendered_data = np.append(indices, distances, axis = 1)
+
+    # Simpan jarak ke dalam DataFrame
+    print("Creating DataFrame...")
+    cols = [("-" + str(i) + "-" + str(j)) for j in ["i", "d"] for i in range(1, k+1)]
+    rendered_distance_model = pd.DataFrame(rendered_data, columns = cols)
+    rendered_distance_model['MAL_ID'] = full_anime_data.MAL_ID
+    rendered_distance_model.set_index('MAL_ID')
+
+    # Simpan jarak ke dalam DataFrame
+    print("Combine columns...")
+    for i in range(1,k+1):
+        j = str(i)
+        combine = [col for col in rendered_distance_model.columns if str("-" + j + "-") in col]
+        rendered_distance_model[j] = rendered_distance_model.apply(lambda r: tuple(r.loc[combine]), axis=1).apply(np.array)
+    rendered_distance_model = rendered_distance_model.drop(columns = cols)
+    return rendered_distance_model
+
+def save_anime_recommendation_model():
+    print("Saving recommendation model...")
+    pickle.dump(rendered_distance_model, open('anime_recommendation_model.sav', 'wb'))
+
+##rendered_distance_model = create_anime_recommendation_model(50)
+##save_anime_recommendation_model()
+
+def print_user_data(user_id):
+    user = rating_data.loc[(rating_data.user_id == user_id) & (rating_data.rating != 0)].copy()
+    user = user.drop(columns=["one", "user_id"])
+    user = append_anime_name(user)
+    print(user)
+
+def append_anime_name(rating_data):
+    return pd.merge(rating_data, full_anime_data[['Name', 'MAL_ID']], how='left', left_on='anime_id', right_on='MAL_ID').drop(columns=["MAL_ID"])
+
+def indices_to_ids(indices):
+    indices = pd.DataFrame(indices.flatten().tolist()).rename(columns={0: 'index'})
+    full_anime_data["index"] = full_anime_data.index
+    indices = pd.merge(indices, full_anime_data[['index', 'MAL_ID']], how='left', left_on='index', right_on='index')
+    return indices
+
+def guess_score(user_id, anime_id):
+    user = rating_data.loc[(rating_data.user_id == user_id) & (rating_data.rating != 0)].copy()
+    user = user.drop(columns=["one", "user_id"])
+    user_item = user.loc[user.anime_id == anime_id]
+    if len(user_item) == 0:
+        print("User didn't watch this anime")
+        return
+    print(full_anime_data.loc[full_anime_data.MAL_ID == anime_id].Name.values[0])
+    target_score = user_item.rating.values[0]
+    user = user.drop(user_item.index)
+    distances, indices = generate_recommendation(get_anime_index(anime_id), k)
+    indices = indices_to_ids(indices)['MAL_ID']
+    nearest_anime = user.loc[user.anime_id.isin(indices)]
+    if len(nearest_anime) > 0:
+        predicted_score = nearest_anime.rating.mean()
+        print("Nearest anime   :\n", append_anime_name(nearest_anime))
+        print("Target Score    :", target_score)
+        print("Predicted Score :", predicted_score)
+        print("Rounded PS      :", int(predicted_score))
+    else:
+        print("User didn't watch similiar anime")
+
+while(True):
+    print("Anime Score Predictor")
+    user_id = input("Select a user ID: ")
+    if user_id == "Q": break
+    print("This user watches:")
+    print_user_data(int(user_id))
+    while(True):
+        anime_id = input("Select an anime ID: ")
+        if anime_id == "Q": break
+        guess_score(int(user_id), int(anime_id))
+    
+
+
+
+
+
+
+##def save_model():
+##    distances, indices = generate_recommendations(watch_data, 17562)
+##    full_anime_data["Recommendation ID"] = indices[:, 1:]
+##    full_anime_data["Recommendation Distances"] = distances[:, 1:]
+##    pickle.dump(full_anime_data, open('anime_data.sav', 'wb'))
+##print("Saving model...")
+##save_model()
+
+# Ubah jarak jadi matrix segitiga atas tanpa diagonal
+# Ini menghemat memori karena jarak antara sebuah anime dengan dirinya
+# sendiri pasti 0, dan jarak antara 2 anime yang sebelumnya ditulis
+# 2 kali sekarang hanya ditulis 1 kali.
+##size = len(full_anime_data)
+##triangular_data = np.zeros((size, size))
+##triangular_data[np.triu_indices(size, 1)] = distances
+
+# Menyimpan model kedalam disk
+# pickle.dump(distance_model, open('model.sav', 'wb'))
 
 # Ini membuat class Dart untuk menyimpan data anime bersama rekomendasinya. Tidak dipakai karena terlalu lamban
 ##k = 100
@@ -195,7 +298,22 @@ with open(r'anime_data.dart', 'a', encoding="utf-8") as f:
 ##    f.write("];\n}\n")
 ##    f.close()
 
+##with open(r'model.dart', 'a') as f:
+##    f.write("class Model {")
+##    f.write("var animeList = [\n")
+##    f.close()
 
+# Membuat class Dart berisi data anime
+# Supaya Panda tidak menambah ... di akhir kolom
+##def create_anime_class():
+##    pd.set_option("display.max_colwidth", None)
+##    print("Drop everything else to save memory")
+##    full_anime_data = full_anime_data.drop(columns=["English name", "Japanese name", "Episodes", "Aired", "Producers", "Licensors", "Duration", "Rating", "Ranked", "Popularity", "Members", "Favorites", "Completed", "On-Hold", "Dropped", "Plan to Watch", "Score-10", "Score-9", "Score-8", "Score-7", "Score-6", "Score-5", "Score-4", "Score-3", "Score-2", "Score-1"])
+##    print("Writing dart class...")
+##    full_anime_data["Dart"] = 'Anime(\nid: ' + full_anime_data["MAL_ID"].astype(str) + ',\nname: "' + full_anime_data["Name"].astype(str) + '",\nscore: ' + full_anime_data["Score"].astype(str) + ',\ngenres: "' + full_anime_data["Genres"].astype(str) + '",\ntype: "' + full_anime_data["Type"].astype(str) + '",\npremiered: "' + full_anime_data["Premiered"].astype(str) + '",\nstudios: "' + full_anime_data["Studios"].astype(str) + '",\n),'
+##    with open(r'anime_data.dart', 'a', encoding="utf-8") as f:
+##        f.write("class Model {\nvar animeList = [\n" + full_anime_data[["Dart"]].to_string(header=False, justify="left", index=False) + "\n];\n}\n")
+##        f.close()
 
 # Tidak bisa disave jadi csv karena terlalu besar, jadi kode diatas harus terus dijalankan saja
 # ----
