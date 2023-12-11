@@ -16,10 +16,16 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+
       ),
       home: AnimatedSplashScreen(
-          splash: Image.asset("images/logo.png",),
+          splash: Container(
+            //decoration: BoxDecoration(border: Border.all(color: Colors.amber)),
+            padding: EdgeInsets.all(32.0),
+            child: Image.asset("images/logo.png"),
+          ),
           duration: 3000,
+          splashIconSize: double.infinity,
           splashTransition: SplashTransition.fadeTransition,
           backgroundColor: Colors.blue,
           nextScreen: MainScreen()),
