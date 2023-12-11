@@ -1,5 +1,8 @@
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:rkmdaa/screens/profile_screen.dart';
+import 'package:rkmdaa/screens/recommendation_screen.dart';
+import 'package:rkmdaa/screens/search_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -41,9 +44,31 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  final List<Widget> _children = [
+    RecommendationScreen(),
+    SearchScreen(),
+    ProfileScreen(),
+  ];
+  int _currentIndex = 0;
+
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+      body: _children[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index){
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.recommend), label: "Recommendation"),
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: "Search"),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+        ],
+      ),
+    );
   }
 }
 
