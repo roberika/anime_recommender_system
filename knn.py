@@ -33,12 +33,12 @@ warnings.filterwarnings('ignore')
 
 # -- Initialisasi array user-anime
 def load_anime_data():
-    return pd.read_csv("Dataset/anime.csv")
+    return pd.read_csv("dataset/anime.csv")
 full_anime_data = load_anime_data()
 print(full_anime_data.shape)
 
 def load_rating_data():
-    return pd.read_csv("filtered_rating_data.csv")
+    return pd.read_csv("dataset/filtered_rating_data.csv")
 rating_data = load_rating_data()
 print(rating_data.shape)
 
@@ -140,15 +140,6 @@ def get_random_recommendation():
     random_id = get_random_anime()
     get_recommendation(random_id)
 #get_random_recommendation()
-
-def get_recommendation_for_user(user_id):
-    watch_list = rating_data.loc[rating_data.user_id == user_id].anime_id
-    recommendation_list = pd.Series([])
-    for anime_id in watch_list:
-        index = full_anime_data.loc[full_anime_data.MAL_ID == anime_id].index.values[0]
-        distances, indices = generate_recommendation(index, k)
-        recommendation_list = recommendation_list._append(pd.Series(distances.flatten(), index=indices.flatten()))
-    print_recommendation_for_user(user_id, recommendation_list)
     
 def print_recommendation_for_user(user_id, recommendation_list):
     distances = recommendation_list.values
@@ -250,6 +241,15 @@ while(True):
 
 
 
+
+# def get_recommendation_for_user(user_id):
+    # watch_list = rating_data.loc[rating_data.user_id == user_id].anime_id
+    # recommendation_list = pd.Series([])
+    # for anime_id in watch_list:
+        # index = full_anime_data.loc[full_anime_data.MAL_ID == anime_id].index.values[0]
+        # distances, indices = generate_recommendation(index, k)
+        # recommendation_list = recommendation_list._append(pd.Series(distances.flatten(), index=indices.flatten()))
+    # print_recommendation_for_user(user_id, recommendation_list)
 
 ##def save_model():
 ##    distances, indices = generate_recommendations(watch_data, 17562)

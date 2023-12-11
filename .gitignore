@@ -1,7 +1,9 @@
-/Dataset
-filtered_anime_data.csv
-filtered_rating_data.csv
-anime_data.txt
-rating_data_*.txt
+/dataset/anime_data.txt
+/dataset/anime_with_synopsis.csv
+/dataset/animelist.csv
+/dataset/rating_complete.csv
+/dataset/rating_data_*.txt
+/dataset/watching_status.csv
+/dataset/filtered_anime_data.csv
+/dataset/filtered_rating_data.csv
 module_install.txt
-anime_data.dart

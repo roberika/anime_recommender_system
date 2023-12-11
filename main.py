@@ -38,11 +38,11 @@ warnings.filterwarnings('ignore')
 # user memang sedang menontonnya atau ada kesibukan lain sehingga sedang tidak
 # dapat menontonnya, sehingga juga tidak dapat menjadi inverse feature.
 def load_anime_data():
-    return pd.read_csv("Dataset/anime.csv")
+    return pd.read_csv("dataset/anime.csv")
 anime_data = load_anime_data()
 
 def load_rating_data():
-    return pd.read_csv("Dataset/animelist.csv")
+    return pd.read_csv("dataset/animelist.csv")
 rating_data = load_rating_data()
 
 # Cek apakah data sudah sesuai isi csv
