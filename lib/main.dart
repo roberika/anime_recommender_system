@@ -1,3 +1,4 @@
+import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -16,7 +17,12 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MainScreen(),
+      home: AnimatedSplashScreen(
+          splash: Image.asset("images/logo.png",),
+          duration: 3000,
+          splashTransition: SplashTransition.fadeTransition,
+          backgroundColor: Colors.blue,
+          nextScreen: MainScreen()),
     );
   }
 }
