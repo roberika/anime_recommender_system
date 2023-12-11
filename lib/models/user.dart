@@ -28,7 +28,7 @@ class User {
               username: json["username"],
               imageURL: json["images"] == null ? null : json["images"]["jpg"]["image_url"],
               linkURL: json["url"],
-              lastOnline: json["last_online"],
+              lastOnline: DateTime.parse(json["last_online"]).toLocal().toString(),
               gender: json["gender"] ?? "Unknown",
               birthday: json["birthday"] == null ? "Unknown" : DateTime.parse(json["birthday"])
                   .toLocal()

@@ -8,7 +8,8 @@ import 'package:http/http.dart' as http;
 import '../models/user.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  ProfileScreen({super.key, this.user});
+  User? user;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -16,7 +17,6 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController usernameController = TextEditingController();
-  User? user;
   String? username;
 
   void retrieveUser() async {
@@ -26,7 +26,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
     if (response.statusCode == 200) {
       setState(() {
-        user = User.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+        widget.user = User.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
       });
     } else {
       throw Exception('Failed to retrive user.');
@@ -35,10 +35,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   User getUser() {
-    if (user == null) {
+    if (widget.user == null) {
       return User(
         id: "-",
-        username: "-",
+        username: "",
         imageURL: null,
         linkURL: "https://myanimelist.net/panel.php",
         lastOnline: "-",
@@ -48,98 +48,103 @@ class _ProfileScreenState extends State<ProfileScreen> {
         joined: "-",
       );
     } else {
-      return user!;
+      return widget.user!;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    usernameController.text = getUser().username;
     return Scaffold(
-        body: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          ProfileImage(
-            imageURL: getUser().imageURL,
-            linkURL: getUser().linkURL,
-          ),
-          SizedBox(
-            height: 20,
-          ),
-          Row(
-            children: [
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 3,
-                child: Text(
-                  "Username",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.normal,
+        body: SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.only(
+            bottom: 16.0,
+            left: 16.0,
+            right: 16.0,
+            top: MediaQuery.of(context).size.height / 6),
+        child: Column(
+          children: [
+            ProfileImage(
+              imageURL: getUser().imageURL,
+              linkURL: getUser().linkURL,
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            Row(
+              children: [
+                Label(label: "Username"),
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration.collapsed(
+                      hintText: '',
+                    ),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    controller: usernameController,
                   ),
                 ),
-              ),
-              Expanded(
-                child: TextField(
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                SizedBox(
+                  width: MediaQuery.of(context).size.width / 9,
+                  child: Container(
+                    alignment: Alignment.center,
+                    padding: EdgeInsets.zero,
+                    color: Colors.blueAccent,
+                    height: 20,
+                    child: IconButton(
+                        padding: EdgeInsets.zero,
+                        iconSize: 15,
+                        icon: Icon(Icons.arrow_forward, color: Colors.white),
+                        onPressed: retrieveUser),
                   ),
-                  controller: usernameController,
                 ),
-              ),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 10,
-                child: Container(
-                  color: Colors.blueAccent,
-                  child: IconButton(
-                      icon: Icon(Icons.arrow_forward, color: Colors.white),
-                      onPressed: retrieveUser),
+              ],
+            ),
+            SizedBox(
+              height: 4,
+            ),
+            ProfileInfoItem(label: "ID", value: getUser().id),
+            SizedBox(
+              height: 4,
+            ),
+            ProfileInfoItem(label: "Gender", value: getUser().gender),
+            SizedBox(
+              height: 4,
+            ),
+            ProfileInfoItem(label: "Birthday", value: getUser().birthday),
+            SizedBox(
+              height: 4,
+            ),
+            ProfileInfoItem(label: "Location", value: getUser().location),
+            SizedBox(
+              height: 4,
+            ),
+            ProfileInfoItem(label: "Last Online", value: getUser().lastOnline),
+            SizedBox(
+              height: 4,
+            ),
+            ProfileInfoItem(label: "Joined On", value: getUser().joined),
+            SizedBox(
+              height: 20,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                      setState(() {
+                        widget.user = null;
+                      });
+                  },
+                  child: Text("Log Out"),
                 ),
-              ),
-            ],
-          ),
-          SizedBox(
-            height: 4,
-          ),
-          ProfileInfoItem(label: "ID", value: getUser().id),
-          SizedBox(
-            height: 4,
-          ),
-          ProfileInfoItem(label: "Gender", value: getUser().gender),
-          SizedBox(
-            height: 4,
-          ),
-          ProfileInfoItem(label: "Birthday", value: getUser().birthday),
-          SizedBox(
-            height: 4,
-          ),
-          ProfileInfoItem(label: "Location", value: getUser().location),
-          SizedBox(
-            height: 4,
-          ),
-          ProfileInfoItem(label: "Last Online", value: getUser().lastOnline),
-          SizedBox(
-            height: 4,
-          ),
-          ProfileInfoItem(label: "Joined On", value: getUser().joined),
-          SizedBox(
-            height: 20,
-          ),
-          Row(
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  if (username != null) {
-                    setState(() {
-                      username = null;
-                    });
-                  }
-                },
-                child: Text("Log Out"),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     ));
   }

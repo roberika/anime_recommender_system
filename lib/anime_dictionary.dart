@@ -1,6 +1,7 @@
+import 'models/anime.dart';
+
 class AnimeDictionary {
-  
-  bool isIndex(String s) {
+  static bool isIndex(String s) {
     double? d = null;
     try {
       d = double.parse(s);
@@ -9,30 +10,34 @@ class AnimeDictionary {
     return d is int || d == d.roundToDouble();
   }
 
-  Map<String, String> searchByName(name) {
-    Map<String, String?> filteredMap = {
+  static Map<String, String> searchByName(name) {
+    Map<String, String> filteredMap = {
       for (final key in animeDictionary.keys)
-        if (animeDictionary[key]!.contains(name)) key: animeDictionary[key]!
+        if (animeDictionary[key]!.toLowerCase().contains(name.toLowerCase())) key: animeDictionary[key]!
     };
-    return filteredMap as Map<String, String>;
+    return filteredMap;
   }
 
-  Map<String, String> searchByIndex(index) {
+  static Map<String, String> searchByIndex(index) {
     if (!isIndex(index)) return <String, String>{};
-    Map<String, String?> filteredMap = {
+    Map<String, String> filteredMap = {
       for (final key in animeDictionary.keys)
         if (key.contains(index)) key: animeDictionary[key]!
     };
-    return filteredMap as Map<String, String>;
+    return filteredMap;
   }
 
-  Map<String, String> search(text) {
-    Map<String, String> result = searchByName(text);
-    result.addAll(searchByIndex(text));
-    return result;
+  static List<Anime> search(text) {
+    Map<String, String> mapResult = searchByName(text);
+    mapResult.addAll(searchByIndex(text));
+    List<Anime> listResult = [];
+    mapResult.forEach((key, value) {
+      listResult.add(Anime(id: key, name: value));
+    });
+    return listResult;
   }
 
-  final animeDictionary = {
+  static final animeDictionary = {
     "1": "Cowboy Bebop",
     "5": "Cowboy Bebop: Tengoku no Tobira",
     "6": "Trigun",

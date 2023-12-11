@@ -19,24 +19,39 @@ class _ProfileInfoItemState extends State<ProfileInfoItem> {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        SizedBox(
-          width: MediaQuery.of(context).size.width / 3,
-          child: Text(
-            widget._label,
-            style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.normal,
-            ),
-          ),
-        ),
+        Label(label: widget._label),
         Expanded(
           child: Text(
-            ': ${widget._value}',
+            '${widget._value}',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 14,
               fontWeight: FontWeight.bold,)
           ),
         ),
+      ],
+    );
+  }
+}
+
+class Label extends StatelessWidget {
+  const Label({super.key, required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        SizedBox(
+          width: MediaQuery.of(context).size.width / 4,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.normal,
+            ),
+          ),
+        ),
+        Text(": ", style: TextStyle(fontSize: 14),),
       ],
     );
   }

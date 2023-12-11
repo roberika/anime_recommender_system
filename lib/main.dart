@@ -4,6 +4,8 @@ import 'package:rkmdaa/screens/profile_screen.dart';
 import 'package:rkmdaa/screens/recommendation_screen.dart';
 import 'package:rkmdaa/screens/search_screen.dart';
 
+import 'models/user.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -44,12 +46,14 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  int _currentIndex = 0;
+  static User? user;
+
   final List<Widget> _children = [
     RecommendationScreen(),
     SearchScreen(),
-    ProfileScreen(),
+    ProfileScreen(user: user),
   ];
-  int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {

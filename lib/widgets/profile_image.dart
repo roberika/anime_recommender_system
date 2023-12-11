@@ -21,9 +21,12 @@ class _ProfileImageState extends State<ProfileImage> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: _launchURL,
-      child: widget.imageURL == null
-          ? Image.asset("images/placeholder_profile_picture.jpeg")
-          : Image.network(widget.imageURL!),
+      child: Container(
+        height: MediaQuery.of(context).size.height / 4,
+        child: widget.imageURL == null
+            ? Image.asset("images/placeholder_profile_picture.jpeg")
+            : Image.network(widget.imageURL!),
+      ),
     );
   }
 }
