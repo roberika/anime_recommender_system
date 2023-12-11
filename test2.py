@@ -26,14 +26,14 @@ import warnings
 warnings.filterwarnings('ignore')
 
 def load_anime_data():
-    return pd.read_csv("Dataset/anime.csv")
+    return pd.read_csv("dataset/anime.csv")
 full_anime_data = load_anime_data()
 print(full_anime_data.shape)
 
 def create_anime_dictionary():
     pd.set_option("display.max_colwidth", None)
     s = "class AnimeDictionary {\nconst animeDictionary = {\n"
-    full_anime_data["Code"] = '"' + full_anime_data["Name"] + '": "' + full_anime_data["MAL_ID"].astype(str) + '",\n'
+    full_anime_data["Code"] = '"' + full_anime_data["MAL_ID"].astype(str) + '": "' + full_anime_data["Name"].str.replace('"', '', regex=False) + '",\n'
     s += ''.join(full_anime_data["Code"].to_list())
     s += "}\n}\n"
     print(s)
