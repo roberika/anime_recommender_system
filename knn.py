@@ -135,7 +135,7 @@ def get_id_by_index(index):
     return watch_data.index[index]
 
 def get_recommendation(anime_id, k):
-    index = get_anime_index(anime_id)
+    index = get_index_by_id(anime_id)
     distances, indices = generate_recommendation(index, k)
     print_recommendation(anime_id, distances.flatten(), indices.flatten())
 
@@ -169,8 +169,8 @@ def save_anime_recommendation_model():
     print("Saving recommendation model...")
     pickle.dump(rendered_distance_model, open('anime_recommendation_model.sav', 'wb'))
 
-rendered_distance_model = create_anime_recommendation_model(100)
-save_anime_recommendation_model()
+# rendered_distance_model = create_anime_recommendation_model(100)
+# save_anime_recommendation_model()
 
 def print_user_data(user_id):
     user = rating_data.loc[(rating_data.user_id == user_id) & (rating_data.rating != 0)].copy()
@@ -197,7 +197,7 @@ def guess_score(user_id, anime_id):
     print(full_anime_data.loc[full_anime_data.MAL_ID == anime_id].Name.values[0])
     target_score = user_item.rating.values[0]
     user = user.drop(user_item.index)
-    distances, indices = generate_recommendation(get_anime_index(anime_id), k)
+    distances, indices = generate_recommendation(get_index_by_id(anime_id), k)
     indices = indices_to_ids(indices)['MAL_ID']
     nearest_anime = user.loc[user.anime_id.isin(indices)]
     if len(nearest_anime) > 0:

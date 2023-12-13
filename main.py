@@ -4,7 +4,7 @@
 # membersihkan data untuk membuang poin data yang tidak berguna.
 ###
 
-# Jangan lupa install package pandas, numpy, matplotlib, seaborn
+# Install dulu package
 # Pastikan python dan pip sudah terinstall
 # Lalu jalankan module_install.bat
 
@@ -25,7 +25,6 @@ pylab.rcParams['figure.figsize'] = 12,8
 # Ignore warnings
 import warnings
 warnings.filterwarnings('ignore')
-
 
 # -- Import data
 # Ada 2 data yang berisi rating user di dataset, yaitu rating_complete dan anime_list

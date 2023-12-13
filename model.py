@@ -61,12 +61,6 @@ def get_recommendation_with_scores(anime_id):
 def get_recommendations_with_scores(anime_ids):
     return append_predicted_scores(get_recommendations(anime_ids))
 
-def get_recommendations(anime_ids):
-    recs = anime_recommendation_model.loc[anime_recommendation_model.MAL_ID.isin(anime_ids)].values.flatten()
-    recs = [i for i in recs if i not in anime_ids]
-    recs_sorted, indices = np.unique(np.array(recs), return_index=True)
-    return [recs[index] for index in sorted(indices)]
-
 def get_recommendations_for_current_user():
     return get_recommendations(user_history.anime_id.to_list())
 
