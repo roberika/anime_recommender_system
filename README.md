@@ -14,7 +14,7 @@ The ARS uses Graph-Based Collaborative Filtering algorithm that measures distanc
 
 The data this algortihm is trained on is from 2020, so it doesn't include anime from after that year. This escpecially means it doesn't consider Isekai, the major genre that only became major after the year 2020. It also doesn't include ratings from after that year, and that means no ratings from the lockdown period where people are most likely to watch anime, and it also before the boom of anime becoming mainstream. All this to say, yeah I need a better database because this one is severly outdated.
 
-## Setup Guide
+## [Deprecated] Setup Guide
 
 For the editing software, I personally just used IDLE that comes prepackage with python. That said, IDLE is very primitive and you should probably either use Jupyter Notebook or VSCode. I've never used those for python though so you'll have to learn them through tutorials.
 
