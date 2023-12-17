@@ -9,15 +9,9 @@
 # Lalu jalankan module_install.bat
 
 # Initialisasi package
-# Database Phase
 import pandas as pd
 import numpy as np
-# Visualization Phase
-import matplotlib.pyplot as plt
-import seaborn as sns
-import matplotlib as mpl
 import math
-import matplotlib.pylab as pylab
 pd.set_option('display.max_columns', 500)
 mpl.style.use('ggplot')
 sns.set_style('white')

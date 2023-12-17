@@ -2,7 +2,6 @@ import pickle
 import requests as rq
 import numpy as np
 import pandas as pd
-import sklearn
 
 # Muat model jarak KNN antar anime yang sudah di hitung sebelumnya
 def load_model():

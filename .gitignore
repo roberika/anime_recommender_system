@@ -6,6 +6,9 @@
 /dataset/watching_status.csv
 /dataset/filtered_anime_data.csv
 /dataset/filtered_rating_data.csv
+/dataset/links.csv
+/dataset/names.sav
+/dataset/points.csv
 module_install.txt
 
 # Miscellaneous

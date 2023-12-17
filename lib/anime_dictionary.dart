@@ -1,6 +1,11 @@
+import 'dart:io';
+
 import 'models/anime.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class AnimeDictionary {
+
   static bool isIndex(String s) {
     double? d = null;
     try {
@@ -30,11 +35,7 @@ class AnimeDictionary {
   static List<Anime> search(text) {
     Map<String, String> mapResult = searchByName(text);
     mapResult.addAll(searchByIndex(text));
-    List<Anime> listResult = [];
-    mapResult.forEach((key, value) {
-      listResult.add(Anime(id: key, name: value));
-    });
-    return listResult;
+    return mapResult.entries.map((e) => Anime(id: e.key, name: e.value, score: null)).toList();
   }
 
   static final animeDictionary = {

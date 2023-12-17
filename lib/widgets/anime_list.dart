@@ -4,8 +4,9 @@ import 'package:rkmdaa/screens/anime_detail_screen.dart';
 import '../models/anime.dart';
 
 class AnimeList extends StatefulWidget {
-  const AnimeList({super.key, required this.searchResults});
-  final List<Anime> searchResults;
+  const AnimeList({super.key, required this.animeList, required this.isHistory});
+  final bool isHistory;
+  final List<Anime> animeList;
 
   @override
   State<AnimeList> createState() => _AnimeListState();
@@ -17,23 +18,24 @@ class _AnimeListState extends State<AnimeList> {
     return Expanded(
       child: ListView.builder(
         itemBuilder: (context, index){
-          return AnimeListItem(anime: widget.searchResults[index]);
+          return AnimeListItem(anime: widget.animeList[index], isHistory: widget.isHistory,);
         },
-        itemCount: widget.searchResults.length,
+        itemCount: widget.animeList.length,
       ),
     );
   }
 }
 
 class AnimeListItem extends StatelessWidget {
-  const AnimeListItem({super.key, required this.anime});
+  const AnimeListItem({super.key, required this.anime, required this.isHistory});
   final Anime anime;
+  final bool isHistory;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: (){
-        Navigator.push(context, MaterialPageRoute(builder: (context) => AnimeDetailScreen()));
+        Navigator.push(context, MaterialPageRoute(builder: (context) => AnimeDetailScreen(anime: anime, isHistory: isHistory,)));
       },
       child: Row(
         children: [
@@ -47,7 +49,10 @@ class AnimeListItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(anime.name),
-                    Text(anime.id),
+                    Row(children: [
+                      Text((anime.score ?? "—").toString()),
+                      Expanded(child: Text(anime.id, textAlign: TextAlign.right,),),
+                    ],)
                   ],
                 ),
               ),

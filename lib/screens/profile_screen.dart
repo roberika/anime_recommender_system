@@ -1,15 +1,13 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:rkmdaa/main.dart';
 import 'package:rkmdaa/widgets/profile_image.dart';
 import 'package:rkmdaa/widgets/profile_info_item.dart';
-import 'package:http/http.dart' as http;
-
 import '../models/user.dart';
 
 class ProfileScreen extends StatefulWidget {
-  ProfileScreen({super.key, this.user});
-  User? user;
+  ProfileScreen({super.key});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -18,43 +16,31 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController usernameController = TextEditingController();
   String? username;
-
-  void retrieveUser() async {
-    final response = await http.get(
-      Uri.parse(
-          'https://api.jikan.moe/v4/users/' + usernameController.value.text),
-    );
-    if (response.statusCode == 200) {
-      setState(() {
-        widget.user = User.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
-      });
-    } else {
-      throw Exception('Failed to retrive user.');
-    }
-    build(context);
-  }
-
-  User getUser() {
-    if (widget.user == null) {
-      return User(
-        id: "-",
-        username: "",
-        imageURL: null,
-        linkURL: "https://myanimelist.net/panel.php",
-        lastOnline: "-",
-        gender: "-",
-        birthday: "-",
-        location: "-",
-        joined: "-",
-      );
-    } else {
-      return widget.user!;
-    }
-  }
+  late User user;
 
   @override
   Widget build(BuildContext context) {
-    usernameController.text = getUser().username;
+    setState(() {
+      user = User.getUser(MainScreen.user);
+    });
+    usernameController.text = user.username;
+
+    void loadUser() async {
+      User? u = await MainScreen.retrieveUser(usernameController.value.text);
+      setState(() {
+        user = User.getUser(u);
+      });
+    }
+
+    void unloadUser() {
+      MainScreen.user = null;
+      MainScreen.recommendations = [];
+      MainScreen.history = [];
+      setState(() {
+        user = User.getUser(null);
+      });
+    }
+
     return Scaffold(
         body: SingleChildScrollView(
       child: Padding(
@@ -66,8 +52,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           children: [
             ProfileImage(
-              imageURL: getUser().imageURL,
-              linkURL: getUser().linkURL,
+              imageURL: user.imageURL,
+              linkURL: user.linkURL,
             ),
             SizedBox(
               height: 20,
@@ -98,7 +84,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         padding: EdgeInsets.zero,
                         iconSize: 15,
                         icon: Icon(Icons.arrow_forward, color: Colors.white),
-                        onPressed: retrieveUser),
+                        onPressed: loadUser),
                   ),
                 ),
               ],
@@ -106,27 +92,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SizedBox(
               height: 4,
             ),
-            ProfileInfoItem(label: "ID", value: getUser().id),
+            ProfileInfoItem(label: "ID", value: user.id),
             SizedBox(
               height: 4,
             ),
-            ProfileInfoItem(label: "Gender", value: getUser().gender),
+            ProfileInfoItem(label: "Gender", value: user.gender),
             SizedBox(
               height: 4,
             ),
-            ProfileInfoItem(label: "Birthday", value: getUser().birthday),
+            ProfileInfoItem(label: "Birthday", value: user.birthday),
             SizedBox(
               height: 4,
             ),
-            ProfileInfoItem(label: "Location", value: getUser().location),
+            ProfileInfoItem(label: "Location", value: user.location),
             SizedBox(
               height: 4,
             ),
-            ProfileInfoItem(label: "Last Online", value: getUser().lastOnline),
+            ProfileInfoItem(label: "Last Online", value: user.lastOnline),
             SizedBox(
               height: 4,
             ),
-            ProfileInfoItem(label: "Joined On", value: getUser().joined),
+            ProfileInfoItem(label: "Joined On", value: user.joined),
             SizedBox(
               height: 20,
             ),
@@ -134,11 +120,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
-                  onPressed: () {
-                      setState(() {
-                        widget.user = null;
-                      });
-                  },
+                  onPressed: unloadUser,
                   child: Text("Log Out"),
                 ),
               ],

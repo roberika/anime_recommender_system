@@ -40,7 +40,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 onEditingComplete: updateSearchResults,
               ),
             ),
-            AnimeList(searchResults: searchResults,),
+            AnimeList(animeList: searchResults, isHistory: true,),
           ],
         ),
       ),

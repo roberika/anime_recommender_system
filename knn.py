@@ -8,7 +8,6 @@
 # Lalu jalankan module_install.bat
 
 # Initialisasi package
-# Database Phase
 import pandas as pd
 import pickle
 import numpy as np
@@ -16,20 +15,8 @@ from scipy.sparse import csr_matrix
 from pandas.api.types import CategoricalDtype
 import sklearn
 from sklearn.neighbors import NearestNeighbors
-# Visualization Phase
-import matplotlib.pyplot as plt
-import seaborn as sns
-import matplotlib as mpl
 import math
-import matplotlib.pylab as pylab
 pd.set_option('display.max_columns', 500)
-mpl.style.use('ggplot')
-sns.set_style('white')
-pylab.rcParams['figure.figsize'] = 12,8
-# Ignore warnings
-import warnings
-warnings.filterwarnings('ignore')
-
 
 # -- Initialisasi array user-anime
 def load_anime_data():
@@ -128,11 +115,17 @@ def print_recommendation(anime_id, distances, indices):
 def get_name_by_id(id):
     return full_anime_data.loc[full_anime_data.MAL_ID==id].Name.values[0]
 
+def get_name_by_index(index):
+    return full_anime_data.iloc[index].Name
+
 def get_index_by_id(id):
     return full_anime_data.loc[full_anime_data.MAL_ID == id].index.values[0]
 
 def get_id_by_index(index):
-    return watch_data.index[index]
+    return full_anime_data.iloc[index].MAL_ID
+
+def get_anime_by_index(index):
+    return full_anime_data.iloc[index]
 
 def get_recommendation(anime_id, k):
     index = get_index_by_id(anime_id)
@@ -142,7 +135,7 @@ def get_recommendation(anime_id, k):
 def get_random_recommendation():
     random_id = get_random_anime()
     get_recommendation(random_id)
-    
+
 def create_anime_recommendation_model(k):
     # Tentukan anime yang bertetangga dekat
     print("Rendering "+str(k)+" nearest neighbors for each anime...")
@@ -169,8 +162,40 @@ def save_anime_recommendation_model():
     print("Saving recommendation model...")
     pickle.dump(rendered_distance_model, open('anime_recommendation_model.sav', 'wb'))
 
-# rendered_distance_model = create_anime_recommendation_model(100)
-# save_anime_recommendation_model()
+#rendered_distance_model = create_anime_recommendation_model(100)
+#save_anime_recommendation_model()
+
+#def print_connection():
+k = 10
+print("Rendering distances " + str(k) + " nearest neighbor for each anime...")
+distances, indices = generate_recommendations(watch_data[0:100], k)
+heads = indices[:, 0].flatten()
+indices = indices[:, 1:]
+distances = distances[:, 1:]
+
+print("Create filter...")
+ones = [np.any(anime != 1.0) for anime in distances]
+heads = heads[ones]
+indices = indices[ones]
+distances = distances[ones]
+
+print("Fetching names and making lists...")
+names = np.array([
+    [get_name_by_index(int(rec)) for rec in np.repeat(heads, k).flatten()],
+    [get_name_by_index(int(rec)) for rec in indices.flatten()],
+    distances.flatten()
+         ])
+
+print("Creating DataFrame...")
+links = pd.DataFrame(data={'from': names[0], 'to': names[1], 'distance': names[2]})
+points = pd.DataFrame([get_name_by_index(int(rec)) for rec in heads.flatten()], columns=["anime"])
+
+print("Save it...")
+links.to_csv(index=False, path_or_buf='links.csv')
+points.to_csv(index=False, path_or_buf='points.csv')
+
+print("Distance model rendered.")
+#print_connection()
 
 def print_user_data(user_id):
     user = rating_data.loc[(rating_data.user_id == user_id) & (rating_data.rating != 0)].copy()
@@ -220,8 +245,57 @@ def simulation():
             anime_id = input("Select an anime ID: ")
             if anime_id == "Q": break
             guess_score(int(user_id), int(anime_id))
-    
 
+
+
+# 400 MB files nopers
+##def create_anime_recommendation_model(k):
+##    # Hitung jarak antar anime
+##    print("Rendering distances " + str(k) + " nearest neighbor for each anime...")
+##    distances, indices = generate_recommendations(watch_data, k)
+##    distances = distances[:, 1:]
+##    indices = indices[:, 1:]
+##
+##    # Filter anime yang hanya punya distance 1.0
+##    # Anime seperti itu tidak memiliki anime tetangga,
+##    # sehingga tidak dapat dibilang data yang bagus
+##    print("Create filter...")
+##    ones = [np.any(anime != 1.0) for anime in distances]
+##
+##    # Ubah data index jadi data ID anime dan nama anime 
+##    print("Fetch IDs and names...")
+##    names = [[get_name_by_index(int(j)) for j in i] for i in indices]
+##    indices = [[get_id_by_index(int(j)) for j in i] for i in indices]
+##
+##    # Gabungkan jadi 1 array
+##    print("Combine to one array...")
+##    rendered_data = np.append(indices, names, axis = 1)
+##
+##    # Simpan jarak ke dalam DataFrame
+##    print("Creating DataFrame...")
+##    cols = [("-" + str(i) + "-" + str(j)) for j in ["i", "n"] for i in range(1, k+1)]
+##    rendered_distance_model = pd.DataFrame(rendered_data, columns = cols)
+##    rendered_distance_model['MAL_ID'] = full_anime_data.MAL_ID
+##    rendered_distance_model.set_index('MAL_ID')
+##    rendered_distance_model = rendered_distance_model.loc[ones]
+##
+##    # Gabungkan jarak dan index anime
+##    print("Combine columns...")
+##    for i in range(1,k+1):
+##        j = str(i)
+##        combine = [col for col in rendered_distance_model.columns if str("-" + j + "-") in col]
+##        rendered_distance_model[j] = rendered_distance_model.apply(lambda r: tuple(r.loc[combine]), axis=1).apply(np.array)
+##    rendered_distance_model = rendered_distance_model.drop(columns = cols)
+##
+##    print("Distance model rendered.")
+##    return rendered_distance_model
+##
+##def save_anime_recommendation_model():
+##    print("Saving recommendation model...")
+##    pickle.dump(rendered_distance_model, open('anime_recommendation_model.sav', 'wb'))
+##
+##rendered_distance_model = create_anime_recommendation_model(100)
+##save_anime_recommendation_model()
 
 ##def create_anime_recommendation_model(k):
 ##    # Hitung jarak antar anime
