@@ -21,6 +21,30 @@ version: 1.0.0+1
 environment:
   sdk: '>=3.2.3 <4.0.0'
 
+flutter_launcher_icons:
+  #  image_path: "assets/images/icon-128x128.png"
+  image_path_android: "images/logo.png"
+  image_path_ios: "images/logo.png"
+  android: ars_launcher # can specify file name here e.g. "ic_launcher"
+  ios: ARS-Launcher-Icon # can specify file name here e.g. "My-Launcher-Icon"
+  adaptive_icon_background: "images/standard_background.jpeg" # only available for Android 8.0 devices and above
+  #adaptive_icon_foreground: "images/standard_background.jpeg" # only available for Android 8.0 devices and above
+  min_sdk_android: 21 # android min sdk min:16, default 21
+  remove_alpha_ios: true
+  background_color_ios: "#5174cf"
+  web:
+    generate: true
+    image_path: "images/logo.png"
+    background_color: "#hexcode"
+    theme_color: "#hexcode"
+  windows:
+    generate: true
+    image_path: "images/logo.png"
+    icon_size: 48 # min:48, max:256, default: 48
+  macos:
+    generate: true
+    image_path: "images/logo.png"
+
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
 # consider running `flutter pub upgrade --major-versions`. Alternatively,
@@ -38,6 +62,7 @@ dependencies:
   animated_splash_screen: ^1.3.0
   url_launcher: ^6.2.2
   http: ^1.1.2
+  flutter_launcher_icons: ^0.13.1
 
 dev_dependencies:
   flutter_test:

@@ -57,9 +57,6 @@ class MainScreen extends StatefulWidget {
   static List<Anime> history = [];
   static List<Anime> recommendations = [];
 
-  static String hist = "AAAAAAAA";
-  static String recs = "aaaaaaaa";
-
   static Future<User?> retrieveUser(String username) async {
     final response = await http.get(
       Uri.parse(
