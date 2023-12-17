@@ -8,7 +8,7 @@ So, your a new anime fan, eh? Or you're an oldie that's just returning? Or a rec
 
 ## Algorithm
 
-The ARS uses Collaborative Filtering based on K-Nearest Neighbor algorithm that measures distance with Cosine Similiarity. This distance is then stored as the model and used to measures how similiar the audience between two anime are.
+The ARS uses Graph-Based Collaborative Filtering algorithm that measures distance with Cosine Similiarity on the anime's audience and plots the 100 nearest neighboring anime as neigbor nodes. This graph is then stored as an adjacency list model and used to aggregate a list of recommended anime to give to the user.
 
 ## Limitations
 
