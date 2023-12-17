@@ -145,7 +145,7 @@ def create_anime_recommendation_model(k):
     # Filter anime yang hanya punya distance 1.0
     # Anime seperti itu tidak memiliki anime tetangga,
     # sehingga tidak dapat dibilang data yang bagus
-    ones = [np.any(anime != 1.0) for anime in distances]
+    ones = [np.any(anime != 1.0) for anime in distances[:, 1:]]
 
     # Ubah data index jadi data ID anime
     print("Replacing indices with IDS...")
@@ -165,36 +165,36 @@ def save_anime_recommendation_model():
 #rendered_distance_model = create_anime_recommendation_model(100)
 #save_anime_recommendation_model()
 
-#def print_connection():
-k = 10
-print("Rendering distances " + str(k) + " nearest neighbor for each anime...")
-distances, indices = generate_recommendations(watch_data[0:100], k)
-heads = indices[:, 0].flatten()
-indices = indices[:, 1:]
-distances = distances[:, 1:]
+def print_connection():
+    k = 10
+    print("Rendering distances " + str(k) + " nearest neighbor for each anime...")
+    distances, indices = generate_recommendations(watch_data[0:100], k)
+    heads = indices[:, 0].flatten()
+    indices = indices[:, 1:]
+    distances = distances[:, 1:]
 
-print("Create filter...")
-ones = [np.any(anime != 1.0) for anime in distances]
-heads = heads[ones]
-indices = indices[ones]
-distances = distances[ones]
+    print("Create filter...")
+    ones = [np.any(anime != 1.0) for anime in distances]
+    heads = heads[ones]
+    indices = indices[ones]
+    distances = distances[ones]
 
-print("Fetching names and making lists...")
-names = np.array([
-    [get_name_by_index(int(rec)) for rec in np.repeat(heads, k).flatten()],
-    [get_name_by_index(int(rec)) for rec in indices.flatten()],
-    distances.flatten()
-         ])
+    print("Fetching names and making lists...")
+    names = np.array([
+        [get_name_by_index(int(rec)) for rec in np.repeat(heads, k).flatten()],
+        [get_name_by_index(int(rec)) for rec in indices.flatten()],
+        distances.flatten()
+             ])
 
-print("Creating DataFrame...")
-links = pd.DataFrame(data={'from': names[0], 'to': names[1], 'distance': names[2]})
-points = pd.DataFrame([get_name_by_index(int(rec)) for rec in heads.flatten()], columns=["anime"])
+    print("Creating DataFrame...")
+    links = pd.DataFrame(data={'from': names[0], 'to': names[1], 'distance': names[2]})
+    points = pd.DataFrame([get_name_by_index(int(rec)) for rec in heads.flatten()], columns=["anime"])
 
-print("Save it...")
-links.to_csv(index=False, path_or_buf='links.csv')
-points.to_csv(index=False, path_or_buf='points.csv')
+    print("Save it...")
+    links.to_csv(index=False, path_or_buf='links.csv')
+    points.to_csv(index=False, path_or_buf='points.csv')
 
-print("Distance model rendered.")
+    print("Distance model rendered.")
 #print_connection()
 
 def print_user_data(user_id):
